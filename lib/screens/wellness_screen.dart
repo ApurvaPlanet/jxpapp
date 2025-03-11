@@ -6,7 +6,7 @@ class WellnessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text("welcome to Wellness Page")),
+      body: Center(child: Text("Wellness Page")),
     );
   }
 }
