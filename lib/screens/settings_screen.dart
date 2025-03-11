@@ -55,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF111C68),
+                backgroundColor: const Color(0xFF45509B),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               ),
