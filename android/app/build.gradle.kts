@@ -37,7 +37,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+
 }
+
+tasks.register<Wrapper>("wrapper") {
+    gradleVersion = "8.10.2"
+}
+tasks.register("prepareKotlinBuildScriptModel"){}
 
 flutter {
     source = "../.."
