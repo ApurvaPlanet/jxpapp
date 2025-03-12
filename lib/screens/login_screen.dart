@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -18,29 +19,53 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _otpController = TextEditingController();
   bool _showOtpField = false;
   bool _isLoading = false;
+  bool isCaptchaValid = true;
+  String generatedCaptcha = '';
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    generateCaptcha();
+  }
+
+  // Function to generate a random Captcha
+  void generateCaptcha() {
+    const String chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final Random random = Random();
+    setState(() {
+      generatedCaptcha = List.generate(6, (index) => chars[random.nextInt(chars.length)]).join();
+    });
+  }
 
   void _getOtp() async {
-    if (_emailController.text.isNotEmpty && _captchaController.text.isNotEmpty) {
-      setState(() => _isLoading = true);
-      try {
-        await Provider.of<AuthProvider>(context, listen: false).getOtp(_emailController.text);
-        setState(() {
-          _showOtpField = true;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("OTP sent successfully to your email.")),
-          );
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send OTP. Try again. Error: $e")),
-        );
-      }
-      setState(() => _isLoading = false);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter Email and Captcha")),
-      );
+    if (_emailController.text.isEmpty || _captchaController.text.isEmpty) {
+      _showMessage("Please enter Email and Captcha");
+      return;
     }
+
+    if (_captchaController.text != generatedCaptcha) {
+      setState(() => isCaptchaValid = false);
+      return;
+    }else{
+      setState(() => isCaptchaValid = true);
+    }
+
+    setState(() {
+      isCaptchaValid = true;
+      _isLoading = true;
+    });
+
+    try {
+      await Provider.of<AuthProvider>(context, listen: false).getOtp(_emailController.text);
+      setState(() => _showOtpField = true);
+      _showMessage("OTP sent successfully to your email.");
+    } catch (e) {
+      _showMessage("Failed to send OTP. Try again. Error: $e");
+    }
+
+    setState(() => _isLoading = false);
+
   }
 
   void _resendOtp() async {
@@ -50,20 +75,14 @@ class _LoginScreenState extends State<LoginScreen> {
         await Provider.of<AuthProvider>(context, listen: false).getOtp(_emailController.text);
         setState(() {
           _showOtpField = true;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("OTP sent successfully to your email.")),
-          );
+          _showMessage("OTP sent successfully to your email.");
         });
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send OTP. Try again. Error: $e")),
-        );
+        _showMessage("Failed to send OTP. Try again. Error: $e");
       }
       setState(() => _isLoading = false);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter Email and Captcha")),
-      );
+      _showMessage("Please enter Email and Captcha");
     }
   }
 
@@ -74,16 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
         await Provider.of<AuthProvider>(context, listen: false).verifyOtp(
             _emailController.text, _otpController.text);
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Invalid OTP, Try Again. Error: $e")),
-        );
+        _showMessage("Invalid OTP, Try Again. Error: $e");
       }
       setState(() => _isLoading = false);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter OTP")),
-      );
+      _showMessage("Enter OTP");
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -153,20 +172,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                       border: Border.all(color: Colors.grey),
                                       borderRadius: BorderRadius.circular(5),
                                     ),
-                                    child: const Text(
-                                      'Xy1z2Z',
+                                    child: Text(
+                                      generatedCaptcha,
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                IconButton(icon: const Icon(Icons.refresh), onPressed: () {}),
+                                IconButton(icon: const Icon(Icons.refresh), onPressed: generateCaptcha),
                               ],
                             ),
                             const SizedBox(height: 20),
                             TextField(
                               controller: _captchaController,
-                              decoration: const InputDecoration(labelText: 'Enter Captcha', border: OutlineInputBorder()),
+                              decoration: InputDecoration(labelText: 'Enter Captcha', border: OutlineInputBorder(), errorText: isCaptchaValid ? null : 'Incorrect Captcha!'),
                             ),
                           ],
                           const SizedBox(height: 20),
