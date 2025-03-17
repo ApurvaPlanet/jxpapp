@@ -11,6 +11,8 @@ class AuthProvider with ChangeNotifier {
   String? _userName;
   int? _otpId;
   final Dio _dio = Dio();
+  OtpResponse? otpResponse;
+  VerifyResponse? verifyResponse;
 
   AuthProvider() {
     _dio.interceptors.add(ApiInterceptor(_dio)); // Attach interceptor
@@ -30,9 +32,9 @@ class AuthProvider with ChangeNotifier {
       final response = await _apiCall("login", {"email": email, "action": "login"});
 
       if (response.statusCode == 200) {
-        final otpResponse = OtpResponse.fromJson(response.data);
-        _otpId = otpResponse.otpId;
-        notifyListeners();
+        otpResponse = OtpResponse.fromJson(response.data);
+        _otpId = otpResponse?.otpId;
+        notify2Listeners();
       }
     } catch (e) {
       throw Exception("Error: $e");
@@ -44,9 +46,9 @@ class AuthProvider with ChangeNotifier {
       final response = await _apiCall("login", {"email": email, "action": "resentotp"});
 
       if (response.statusCode == 200) {
-        final otpResponse = OtpResponse.fromJson(response.data);
-        _otpId = otpResponse.otpId;
-        notifyListeners();
+        otpResponse = OtpResponse.fromJson(response.data);
+        _otpId = otpResponse?.otpId;
+        notify2Listeners();
       }
     } catch (e) {
       throw Exception("Error: $e");
@@ -74,7 +76,7 @@ class AuthProvider with ChangeNotifier {
           await prefs.setString('userId', _userId!);
           await prefs.setString('userName', verifyResponse.userName);
           await prefs.setString('webviewUrl', verifyResponse.url);
-          notifyListeners();
+          notify2Listeners();
         } else {
           throw Exception("OTP Verification Failed");
         }
@@ -89,7 +91,7 @@ class AuthProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _userId = prefs.getString('userId');
     _userName = prefs.getString('userName');
-    notifyListeners();
+    notify2Listeners();
   }
 
   Future<void> logout() async {
@@ -97,6 +99,10 @@ class AuthProvider with ChangeNotifier {
     await prefs.clear();
     _userId = null;
     _userName = null;
+    notify2Listeners();
+  }
+
+  notify2Listeners() {
     notifyListeners();
   }
 }

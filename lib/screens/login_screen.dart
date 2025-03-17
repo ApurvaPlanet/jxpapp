@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/blur_loader.dart';
 import '../widgets/bottom_nav_bar.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,6 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  String? emailErrorText;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+  _emailController.dispose();
+  _captchaController.dispose();
+  _otpController.dispose();
+    super.dispose();
+  }
+
   void _getOtp() async {
     if (_emailController.text.isEmpty || _captchaController.text.isEmpty) {
       _showMessage("Please enter Email and Captcha");
@@ -58,8 +70,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await Provider.of<AuthProvider>(context, listen: false).getOtp(_emailController.text);
-      setState(() => _showOtpField = true);
-      _showMessage("OTP sent successfully to your email.");
+      var otpResponse = Provider.of<AuthProvider>(context, listen: false).otpResponse;
+      setState(() {
+        _showOtpField = !(otpResponse?.status == 'error');
+        _showMessage(otpResponse!.message);
+      });
     } catch (e) {
       _showMessage("Failed to send OTP. Try again. Error: $e");
     }
@@ -68,14 +83,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   }
 
+
   void _resendOtp() async {
     if (_emailController.text.isNotEmpty && _captchaController.text.isNotEmpty) {
       setState(() => _isLoading = true);
       try {
         await Provider.of<AuthProvider>(context, listen: false).getOtp(_emailController.text);
+
+        var otpResponse = Provider.of<AuthProvider>(context, listen: false).otpResponse;
+
         setState(() {
-          _showOtpField = true;
-          _showMessage("OTP sent successfully to your email.");
+          _showMessage(otpResponse!.message);
         });
       } catch (e) {
         _showMessage("Failed to send OTP. Try again. Error: $e");
@@ -92,6 +110,20 @@ class _LoginScreenState extends State<LoginScreen> {
       try {
         await Provider.of<AuthProvider>(context, listen: false).verifyOtp(
             _emailController.text, _otpController.text);
+
+        var verifyResponse = Provider.of<AuthProvider>(context, listen: false).verifyResponse;
+        if (verifyResponse?.status == 'error') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(verifyResponse!.message)),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(verifyResponse!.message)),
+          );
+
+          Provider.of<AuthProvider>(context, listen: false).notify2Listeners();
+        }
+
       } catch (e) {
         _showMessage("Invalid OTP, Try Again. Error: $e");
       }
@@ -103,6 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    return emailRegex.hasMatch(email);
   }
 
   @override
@@ -157,7 +194,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 5),
                           TextField(
                             controller: _emailController,
-                            decoration: const InputDecoration(labelText: 'Enter your email', border: OutlineInputBorder()),
+                            decoration: InputDecoration(
+                                labelText: 'Enter your email',
+                                border: const OutlineInputBorder(),
+                                errorText: emailErrorText
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            onChanged: (value) {
+                              setState(() {
+                                emailErrorText = _isValidEmail(value) ? null : "Enter a valid email";
+                              });
+                            },
                           ),
                           if (!_showOtpField) ...[
                             const SizedBox(height: 20),
@@ -311,19 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   if (_isLoading)
-                    Positioned.fill(
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                        child: Container(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          child: const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF111C68),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    BlurLoader(),
                 ],
               ),
             ),

@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:jxp_app/widgets/blur_loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -16,6 +19,15 @@ class _HomeScreenState extends State<HomeScreen> {
   late SharedPreferences prefs;
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    // _webViewController.dispose();
+    _webViewController.clearCache();
+    _webViewController.setNavigationDelegate(NavigationDelegate()); // Remove delegate
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
 
@@ -27,14 +39,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (_) {
-            setState(() {
-              _isLoading = true;
-            });
+            if (mounted) {
+              setState(() {
+                _isLoading = true;
+              });
+            }
           },
           onPageFinished: (_) {
-            setState(() {
-              _isLoading = false;
-            });
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
           },
           onNavigationRequest: (NavigationRequest request) {
             return NavigationDecision.navigate;
@@ -47,10 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeWebView() async {
     prefs = await SharedPreferences.getInstance();
-    setState(() {
-      url = prefs.getString('webviewUrl') ?? 'http://sandbox.journeyxpro.com/jxp/crewlogin/';
-      print("URL: $url");
-    });
+    if (mounted) {
+      setState(() {
+        url = prefs.getString('webviewUrl') ??
+            'http://sandbox.journeyxpro.com/jxp/crewlogin/';
+        print("URL: $url");
+      });
+    }
 
     if (url != null) {
       _webViewController.loadRequest(Uri.parse(url!));
@@ -65,7 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             if (url != null) WebViewWidget(controller: _webViewController),
             if (_isLoading)
-              const Center(child: CircularProgressIndicator()),
+              BlurLoader(),
+              // const Center(child: CircularProgressIndicator()),
           ],
         ),
       ),

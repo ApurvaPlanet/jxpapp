@@ -1,4 +1,6 @@
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:jxp_app/constants/app_constants.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import '../screens/home_screen.dart';
 import '../screens/wellness_screen.dart';
@@ -22,6 +24,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
       const SettingsScreen(),
     ];
   }
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
 
   void _onItemTapped(int index) {
     if (_selectedIndex == index && index == 1) {
@@ -57,20 +62,29 @@ class _BottomNavBarState extends State<BottomNavBar> {
     ];
   }
 
+  final List<Widget> _pages = [
+    const WellnessScreen(),
+    const HomeScreen(),
+    const SettingsScreen()
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return PersistentTabView(
-      context,
-      controller: _controller,
-      screens: _screens(),
-      items: _navBarsItems(),
-      confineToSafeArea: true,
-      backgroundColor: const Color(0xFF111C68),
-      handleAndroidBackButtonPress: true,
-      resizeToAvoidBottomInset: true,
-      stateManagement: false, // Disable state management to force refresh
-      onItemSelected: _onItemTapped, // Handle tab switch
-      navBarStyle: NavBarStyle.style15,
+    return Scaffold(
+      key: _scaffoldKey,
+      bottomNavigationBar: ConvexAppBar(
+        initialActiveIndex: 1,
+        style: TabStyle.fixed,
+        backgroundColor: appthemeDark,
+        items: [
+          TabItem(icon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white54), title: '', activeIcon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white)),
+          TabItem(icon: Image.asset('assets/BottomBar/home.png')),
+          TabItem(icon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white54), title: '', activeIcon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white)),
+        ],
+        onTap: _onItemTapped,
+      ),
+      body: _pages[_selectedIndex],
     );
   }
+
 }
