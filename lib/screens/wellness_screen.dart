@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jxp_app/screens/Wellness/daily_steps_screen.dart';
 
 import '../constants/app_constants.dart';
 import '../widgets/main_app_bar.dart';
@@ -17,9 +18,9 @@ class _WellnessScreenState extends State<WellnessScreen> {
   final List<Map<String, String>> modules = [
     {'image': 'assets/WellnessModules/Daily Steps.png', 'text': 'Daily Steps'},
     {'image': 'assets/WellnessModules/BMI.png', 'text': 'BMI'},
-    {'image': 'assets/WellnessModules/Sleep.png', 'text': 'Sleep'},
-    {'image': 'assets/WellnessModules/Active Hours.png', 'text': 'Active Hours'},
-    {'image': 'assets/WellnessModules/Stand Hours.png', 'text': 'Stand Hours'},
+    // {'image': 'assets/WellnessModules/Sleep.png', 'text': 'Sleep'},
+    // {'image': 'assets/WellnessModules/Active Hours.png', 'text': 'Active Hours'},
+    // {'image': 'assets/WellnessModules/Stand Hours.png', 'text': 'Stand Hours'},
   ];
 
   @override
@@ -68,17 +69,11 @@ class _WellnessScreenState extends State<WellnessScreen> {
                       onTap: () {
                         switch (modules[index]['text']!) {
                           case 'Daily Steps':
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //       builder: (context) => const RecordPopup()),
-                          // );
-                          //   showDialog(
-                          //     context: context,
-                          //     builder: (BuildContext context) {
-                          //       return RecordPopup();
-                          //     },
-                          //   );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const DailyStepsPage()),
+                            );
                             break;
                           case 'BMI':
                             Navigator.push(

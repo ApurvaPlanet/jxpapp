@@ -69,13 +69,13 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _apiCall("login", requestData); // Adjusted endpoint for clarity
       if (response.statusCode == 200) {
-        final verifyResponse = VerifyResponse.fromJson(response.data);
-        if (verifyResponse.status == "success" && verifyResponse.id > 0) {
-          _userId = verifyResponse.id.toString();
+        verifyResponse = VerifyResponse.fromJson(response.data);
+        if (verifyResponse?.status == "success" && verifyResponse!.id > 0) {
+          _userId = verifyResponse?.id.toString();
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('userId', _userId!);
-          await prefs.setString('userName', verifyResponse.userName);
-          await prefs.setString('webviewUrl', verifyResponse.url);
+          await prefs.setString('userName', verifyResponse!.userName);
+          await prefs.setString('webviewUrl', verifyResponse!.url);
           notify2Listeners();
         } else {
           throw Exception("OTP Verification Failed");

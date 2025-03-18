@@ -111,14 +111,16 @@ class _LoginScreenState extends State<LoginScreen> {
         await Provider.of<AuthProvider>(context, listen: false).verifyOtp(
             _emailController.text, _otpController.text);
 
-        var verifyResponse = Provider.of<AuthProvider>(context, listen: false).verifyResponse;
+        final verifyResponse =  Provider.of<AuthProvider>(context, listen: false).verifyResponse;
         if (verifyResponse?.status == 'error') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(verifyResponse!.message)),
+            SnackBar(content: Text(verifyResponse?.message ?? "1")),
           );
         } else {
+          print('verifyResponse: ${verifyResponse?.id}');
+
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(verifyResponse!.message)),
+            SnackBar(content: Text(verifyResponse?.message ?? "2")),  // problem
           );
 
           Provider.of<AuthProvider>(context, listen: false).notify2Listeners();

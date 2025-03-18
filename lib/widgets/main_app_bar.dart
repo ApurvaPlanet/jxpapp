@@ -9,7 +9,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
 
       title: Image.asset(
-        'assets/ocs_logo.png',
+        'assets/jxp_logo.png',
         height: 40,
       ),
       centerTitle: false,

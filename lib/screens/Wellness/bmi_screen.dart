@@ -1,6 +1,14 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:jxp_app/providers/wellness_provider.dart';
+import 'package:jxp_app/widgets/HistoryTitleWidget.dart';
+import 'package:jxp_app/widgets/main_app_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/app_constants.dart';
+import '../../widgets/blur_loader.dart';
 import '../../widgets/sub_app_bar.dart';
 
 class BmiScreen extends StatefulWidget {
@@ -17,144 +25,142 @@ class _BmiScreenState extends State<BmiScreen> {
 
   String bmiResult = "";
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     // TODO: implement initState
+    getUserDetails();
     super.initState();
-    heightController.text = '170';
-    weightController.text = '55';
+  }
 
-    calculateBMI();
+  Future<void> getUserDetails() async {
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await Provider.of<WellnessProvider>(context, listen: false).getBMIDetail(id, 'bmi');
+      var bmiResponse = Provider.of<WellnessProvider>(context, listen: false).bmiResponse;
+      setState(() {
+        heightController.text = '${bmiResponse?.height}';
+        weightController.text = '${bmiResponse?.weight}';
+        _isLoading = false;
+      });
+      calculateBMI();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage("Failed to get details. Try again. Error: $e");
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appBackground,
-      appBar: AppBar(
-        title: Image.asset(
-          'assets/ocs_logo.png',
-          height: 40,
-        ),
-        centerTitle: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-                onPressed: () {
-                  print('menu pressed');
-                },
-                icon: const Icon(Icons.menu_sharp)
-            ),
-          )
-        ],
-      ),
-      body: WillPopScope(
-          onWillPop: () async {
-            // Return false to prevent the back button from popping the screen
-            return true;
-          },
-          child: SingleChildScrollView(
-            child: Column(
-              // mainAxisAlignment: MainAxisAlignment.start,
-              // crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SubAppBar(pageTitle: 'BMI', showBackBtn: true,),
+      appBar: MainAppBar(),
+      body: SingleChildScrollView(
+        child: Stack(
+          children:[
+            Column(
+            children: [
+              const SubAppBar(pageTitle: 'BMI', showBackBtn: true,),
 
-                Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      buildTitleWidget(
-                          'BMI Calculator',
-                          [
-                            IconButton(
-                                onPressed: () {
-                                  // calculateBMI();
-                                },
-                                icon: Icon(Icons.refresh, size: 30, color: appthemeDark)
-                            ),
-                          ]
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HistoryTitleWidget(title: 'BMI Calculator', items: [
+                      IconButton(
+                          onPressed: () {
+                            // calculateBMI();
+                          },
+                          icon: Icon(Icons.refresh, size: 30, color: appthemeDark)
                       ),
+                    ]),
 
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(15, 5, 15, 15),
-                        // padding: const EdgeInsets.all(15),
-                        // height: 90,
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 15),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // background color
+                        borderRadius: BorderRadius.circular(5), // corner radius
+                      ),
+                      child: Column(
+                        children: [
+                          buildInputData('Height', 'Cm', heightController),
+                          const SizedBox(height: 15),
+                          buildInputData('Weight', 'Kg', weightController),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () {
+                        calculateBMI();
+                      },
+                      child: Container(
+                        height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white, // background color
+                          color: appthemeDark, // background color
                           borderRadius: BorderRadius.circular(5), // corner radius
                         ),
-                        child: Column(
-                          children: [
-                            buildInputData('Height', 'Cm', heightController),
-                            const SizedBox(height: 15),
-                            buildInputData('Weight', 'Kg', weightController),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: () {
-                          calculateBMI();
-                        },
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: appthemeDark, // background color
-                            borderRadius: BorderRadius.circular(5), // corner radius
-                          ),
-                          child: Center(
-                            child: Text(
-                                bmiResult,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16
-                                )
-                            ),
+                        child: Center(
+                          child: Text(
+                              bmiResult,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16
+                              )
                           ),
                         ),
                       ),
+                    ), // column 1
 
-                      const SizedBox(height: 20),
-                      // Expanded(child: Container()),
-                      const Text(
-                        'Categories',
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                    const SizedBox(height: 30),
+                    HistoryTitleWidget(title: 'Categories', items: []),
+                    const SizedBox(height: 20),
 
-                      Container(
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: Colors.white, // background color
-                          borderRadius: BorderRadius.circular(5), // corner radius
-                        ),
-                        child: Column(
-                          children: [
-                            buildCategories('Under Weight', 'Below 18.5'),
-                            const SizedBox(height: 5),
-                            buildCategories('Healthy Weight', '18.5 - 24.9'),
-                            const SizedBox(height: 5),
-                            buildCategories('Over Weight', '25.0 - 29.9'),
-                            const SizedBox(height: 5),
-                            buildCategories('Obese', '30.0 and above'),
-                          ],
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // background color
+                        borderRadius: BorderRadius.circular(5), // corner radius
                       ),
-                    ],
-                  ),
+                      child: Column(
+                        children: [
+                          buildCategories('Under Weight', 'Below 18.5'),
+                          const SizedBox(height: 5),
+                          buildCategories('Healthy Weight', '18.5 - 24.9'),
+                          const SizedBox(height: 5),
+                          buildCategories('Over Weight', '25.0 - 29.9'),
+                          const SizedBox(height: 5),
+                          buildCategories('Obese', '30.0 and above'),
+                        ],
+                      ),
+                    ), // column 2
+                  ],
                 ),
-              ],
-            ),
-          )
+              ),
+            ],
+          ),
+
+            if (_isLoading)
+              BlurLoader()
+          ]
+        ),
       ),
     );
   }
@@ -195,7 +201,7 @@ class _BmiScreenState extends State<BmiScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 30),
+        const SizedBox(width: 20),
         Text(measure),
       ],
     );
