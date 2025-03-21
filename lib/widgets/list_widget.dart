@@ -351,7 +351,7 @@ class _ListWidgetState extends State<ListWidget> {
                 )
                 : Center(
                   child: Text(
-                    "No data available",
+                    "",
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 );

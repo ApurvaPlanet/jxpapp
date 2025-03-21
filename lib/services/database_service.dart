@@ -44,16 +44,36 @@ class DatabaseService {
   }
 
 
-  void addSteps(String stepsCount, String date) async {
+  Future<void> addSteps(String stepsCount, String date) async {
     final db = await database;
-    await db.insert(
+
+    // Check if entry exists for the given date
+    final existing = await db.query(
+      _stepsTableName,
+      where: '$_dateColumn = ?',
+      whereArgs: [date],
+    );
+
+    if (existing.isNotEmpty) {
+      // Update existing record
+      await db.update(
+        _stepsTableName,
+        {_stepsColumn: stepsCount},
+        where: '$_dateColumn = ?',
+        whereArgs: [date],
+      );
+    } else {
+      // Insert new record
+      await db.insert(
         _stepsTableName,
         {
           _stepsColumn: stepsCount,
-          _dateColumn: date
-        }
-    );
+          _dateColumn: date,
+        },
+      );
+    }
   }
+
 
   Future<List<DailyStepsDBModel>> getDailyStepsDB() async {
     final db = await database;
@@ -66,24 +86,23 @@ class DatabaseService {
     final db = await database;
     await db.update(
         _stepsTableName,
-    {
-      _stepsColumn: steps
-    },
-    where: 'id = ?',
-      whereArgs: [
-        id,
-      ]
+        {
+          _stepsColumn: steps
+        },
+        where: 'id = ?',
+        whereArgs: [
+          id,
+        ]
     );
   }
 
-  void deleteStep(int id) async {
+  Future<void> deleteStep(String date) async {
     final db = await database;
     await db.delete(
-        _stepsTableName,
-      where: 'id = ?',
-      whereArgs: [
-        id,
-      ]
+      _stepsTableName,
+      where: 'date = ?',
+      whereArgs: [date],
     );
   }
+
 }

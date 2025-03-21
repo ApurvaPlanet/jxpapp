@@ -15,7 +15,7 @@ import './widgets/bottom_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  requestNotificationPermission();
+  await requestPermissions();
   await initializeService();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? userId = prefs.getString('userId');
@@ -34,6 +34,14 @@ void requestNotificationPermission() async {
   } else {
     print("Notification permission granted!");
   }
+}
+
+Future<void> requestPermissions() async {
+  await [
+    Permission.notification,
+    Permission.activityRecognition, // Required for step counting
+    Permission.ignoreBatteryOptimizations, // Helps keep the service alive
+  ].request();
 }
 
 // Notification Config

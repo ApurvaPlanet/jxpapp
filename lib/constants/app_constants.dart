@@ -12,7 +12,7 @@ var graphBarColor = const Color(0xFFA3C8DE);
 var darkGrayColor = const Color(0xFF818599);
 
 var iosVersion = 'v1.0.1';
-var androidVersion = 'v1.0.1';
+var androidVersion = 'v1.0.3';
 
 String getAppVersion() {
   if (Platform.isIOS) {

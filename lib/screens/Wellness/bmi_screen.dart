@@ -77,18 +77,21 @@ class _BmiScreenState extends State<BmiScreen> {
               const SubAppBar(pageTitle: 'BMI', showBackBtn: true,),
 
               Padding(
-                padding: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    HistoryTitleWidget(title: 'BMI Calculator', items: [
-                      IconButton(
-                          onPressed: () {
-                            // calculateBMI();
-                          },
-                          icon: Icon(Icons.refresh, size: 30, color: appthemeDark)
-                      ),
-                    ]),
+                    HistoryTitleWidget(
+                      title: "BMI Calculator",
+                      items: [
+                        IconButton(icon: Icon(Icons.refresh), onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => BmiScreen()), // Reload the same screen
+                          );
+                        }),
+                      ],
+                    ),
 
                     Container(
                       padding: const EdgeInsets.fromLTRB(15, 5, 15, 15),

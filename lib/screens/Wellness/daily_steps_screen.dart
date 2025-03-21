@@ -15,6 +15,7 @@ import '../../providers/wellness_provider.dart';
 import '../../widgets/blur_loader.dart';
 import '../../widgets/graph_widget.dart';
 
+
 class DailyStepsPage extends StatefulWidget {
   const DailyStepsPage({super.key});
 
@@ -45,7 +46,6 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
     initPlatformState();
     getUserDetails();
     // getDailyStepsData();
-    getStepsFromDB();
     super.initState();
 
     DateTime now = DateTime.now();
@@ -102,7 +102,7 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
 
     try {
       Provider.of<WellnessProvider>(context, listen: false).getWellnessDetail(
-        "sleephours",
+        "dailysteps",
         formattedFromDate,
         formattedToDate,
       );
@@ -118,24 +118,12 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
 
   getStepsFromDB() async {
     var list = await _dbService.getDailyStepsDB();
-    print('steps db: ${list.map((e) => (e.id, e.date, e.steps))}');
-  }
+    print('Steps from DB: ${list.map((e) => '${e.date}: ${e.steps}')}');
 
-  getDailyStepsData() async {
-    var prefs = await SharedPreferences.getInstance();
-    var idStr = prefs.get('userId').toString();
-    var id = int.parse(idStr);
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await Provider.of<DailyStepsProvider>(context, listen: false).getDailyStepsData(idStr, "09-03-2025", "15-03-2025");
-    } catch(e) {
+    if (list.isNotEmpty) {
       setState(() {
-        _isLoading = false;
+        _steps = list.last.steps; // Show latest step count
       });
-      _showMessage("Failed to get details. Try again. Error: $e");
     }
   }
 
@@ -162,6 +150,7 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
       });
       _showMessage("Failed to get details. Try again. Error: $e");
     }
+    getStepsFromDB();
   }
 
   void _showMessage(String message) {
@@ -176,30 +165,31 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
   }
 
   // Handle step count changed
-  void onStepCount(StepCount event) {
+  // void onStepCount(StepCount event) {
+  //   print("Step Event Received: ${event.steps} at ${event.timeStamp}");
+  //   int steps = event.steps;
+  //   DateTime timeStamp = event.timeStamp;
+  //   String formattedDate = DateFormat('dd-MM-yyyy').format(timeStamp);
+  //
+  //   setState(() {
+  //     _steps = event.steps.toString();
+  //     _kCal = '${calculateCaloriesBurned(steps, double.parse('$weight'), 'walking')}';
+  //   });
+  // }
+
+  void onStepCount(StepCount event) async {
     int steps = event.steps;
     DateTime timeStamp = event.timeStamp;
+    String formattedDate = DateFormat('dd-MM-yyyy').format(timeStamp);
+
     setState(() {
       _steps = event.steps.toString();
       _kCal = '${calculateCaloriesBurned(steps, double.parse('$weight'), 'walking')}';
     });
-  }
 
-  // void onStepCount(StepCount event) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   int savedBaseSteps = prefs.getInt('baseSteps') ?? event.steps;
-  //
-  //   int currentSteps = event.steps - savedBaseSteps;
-  //   if (currentSteps < 0) currentSteps = 0; // Prevent negative values
-  //
-  //   setState(() {
-  //     _steps = currentSteps.toString();
-  //     _kCal = '${calculateCaloriesBurned(currentSteps, weight.toDouble(), 'walking')}';
-  //   });
-  //
-  //   prefs.setInt('stepsOffline', currentSteps);
-  //   prefs.setInt('baseSteps', savedBaseSteps);
-  // }
+    // Save steps to local database
+    await _dbService.addSteps(_steps, formattedDate);
+  }
 
   /// Handle status changed
   void onPedestrianStatusChanged(PedestrianStatus event) {
@@ -284,6 +274,8 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
   }
 
 
+
+
   @override
   Widget build(BuildContext context) {
 
@@ -301,71 +293,66 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
       body: Stack(
         children: [
           Column(
-          children: [
-            SubAppBar(
-              pageTitle: 'Daily Steps',
-              showBackBtn: true,
-            ),
+            children: [
+              SubAppBar(
+                pageTitle: 'Daily Steps',
+                showBackBtn: true,
+              ),
 
-            Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                SizedBox(height: 20),
-                HistoryTitleWidget(
-                    title: 'Todays Status',
-                    items: [
-                      IconButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => DailyStepsPage()), // Reload the same screen
-                            );
-                          },
-                          icon: Icon(Icons.refresh, size: 30, color: appthemeDark)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    HistoryTitleWidget(
+                      title: "Today's Status",
+                      items: [
+                        IconButton(icon: Icon(Icons.refresh), onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => DailyStepsPage()), // Reload the same screen
+                          );
+                        }),
+                      ],
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      width: MediaQuery.of(context).size.width - 30,
+                      // height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white, // background color
+                        borderRadius: BorderRadius.circular(5), // corner radius
                       ),
-                    ]
+                      child: Column(
+                        children: [
+                          Text('$_steps steps', style: TextStyle(fontSize: 20)),
+                          // Text('$_stepsOffline steps offline', style: TextStyle(fontSize: 20)),
+                          Text('Approximate calories burned: $_kCal'),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20,),
+                    HistoryTitleWidget(
+                      title: "History",
+                      items: [],
+                    ),
+                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 400,
+                      width: double.infinity,
+                      child: GraphWidget(
+                        wellnessData: filteredData ?? [],
+                        selectedPeriod: selectedPeriod, // Pass selected period
+                        onPeriodChange: _fetchData, // Pass the function to update API
+                        module: 'dailysteps',
+
+                      ),
+                    ),
+                  ],
                 ),
-
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  width: MediaQuery.of(context).size.width - 30,
-                  // height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white, // background color
-                    borderRadius: BorderRadius.circular(5), // corner radius
-                  ),
-                  child: Column(
-                    children: [
-                      Text('$_steps steps', style: TextStyle(fontSize: 20)),
-                      // Text('$_stepsOffline steps offline', style: TextStyle(fontSize: 20)),
-                      Text('Approximate calories burned: $_kCal'),
-                    ],
-                  ),
-                ),
-
-                SizedBox(
-                  height: 320,
-                  width: double.infinity,
-                  child: GraphWidget(
-                    wellnessData: filteredData ?? [],
-                    selectedPeriod: selectedPeriod, // Pass selected period
-                    onPeriodChange: _fetchData, // Pass the function to update API
-                    module: 'dailysteps',
-
-                  ),
-                ),
-                // SizedBox(height: 20),
-                // HistoryTitleWidget(
-                //     title: 'History',
-                //     items: []
-                // ),
-
-              ],
-            ),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
 
           if (_isLoading)
             BlurLoader()

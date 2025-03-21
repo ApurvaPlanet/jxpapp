@@ -277,7 +277,7 @@ class _EditRecordState extends State<EditRecord> {
         clipBehavior: Clip.none,
         children: [
           Padding(
-              padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -292,13 +292,13 @@ class _EditRecordState extends State<EditRecord> {
                   isTimePicker: widget.module == 'sleephours',
                 ),
                 if (widget.inputText2.isNotEmpty)
-                buildInputData(
-                  widget.inputText2,
-                  'Hr',
-                  input2Controller,
-                  null,
-                  isTimePicker: widget.module == 'sleephours',
-                ),
+                  buildInputData(
+                    widget.inputText2,
+                    'Hr',
+                    input2Controller,
+                    null,
+                    isTimePicker: widget.module == 'sleephours',
+                  ),
                 buildInputData(
                   'Sleep Hour',
                   'Hr',
@@ -307,21 +307,21 @@ class _EditRecordState extends State<EditRecord> {
                   isTimePicker: false,
                 ),
                 if(widget.module != 'activehours')
-                buildInputData(
-                  'Active Hour',
-                  'Hr',
-                  activeHourController,
-                  null,
-                  isTimePicker: false,
-                ),
+                  buildInputData(
+                    'Active Hour',
+                    'Hr',
+                    activeHourController,
+                    null,
+                    isTimePicker: false,
+                  ),
                 if(widget.module != 'standhours')
-                buildInputData(
-                  'Stand Hour',
-                  'Hr',
-                  standHourController,
-                  null,
-                  isTimePicker: false,
-                ),
+                  buildInputData(
+                    'Stand Hour',
+                    'Hr',
+                    standHourController,
+                    null,
+                    isTimePicker: false,
+                  ),
                 const SizedBox(height: 30),
                 GestureDetector(
                     child: Container(
@@ -386,6 +386,7 @@ class _EditRecordState extends State<EditRecord> {
         ],
       ),
     );
+
   }
 }
 
