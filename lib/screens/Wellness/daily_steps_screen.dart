@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:jxp_app/providers/dailysteps_provider.dart';
+import 'package:jxp_app/services/database_service.dart';
 import 'package:jxp_app/widgets/HistoryTitleWidget.dart';
 import 'package:jxp_app/widgets/main_app_bar.dart';
 import 'package:jxp_app/widgets/sub_app_bar.dart';
@@ -7,8 +10,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/app_constants.dart';
+import '../../models/wellness_response.dart';
 import '../../providers/wellness_provider.dart';
 import '../../widgets/blur_loader.dart';
+import '../../widgets/graph_widget.dart';
 
 class DailyStepsPage extends StatefulWidget {
   const DailyStepsPage({super.key});
@@ -21,6 +26,13 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
 
+  DateTime fromDate = DateTime.now();
+  DateTime toDate = DateTime.now();
+  List<WellnessDetail> wellnessData = [];
+  String selectedPeriod = "Week"; // Default selection
+
+  DatabaseService _dbService = DatabaseService.instance;
+
   String _status = '', _steps = '', _kCal = '';
   var _stepsOffline = 0;
   int height = 0, weight = 0;
@@ -32,8 +44,99 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
     // TODO: implement initState
     initPlatformState();
     getUserDetails();
+    // getDailyStepsData();
+    getStepsFromDB();
     super.initState();
-    // loadSteps();
+
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('dd-MM-yyyy').format(now);
+
+    print(formattedDate);
+
+    _fetchData(selectedPeriod);
+  }
+
+  void _fetchData(String period) {
+    DateTime now = DateTime.now();
+    DateTime from, to = now;
+
+    switch (period) {
+      case "Day":
+        from = now;
+        to = now;
+        break;
+      case "Week":
+        from = now.subtract(
+          Duration(days: now.weekday - 1),
+        ); // Start of the week (Monday)
+        to = from.add(Duration(days: 6)); // End of the week (Sunday)
+        break;
+      case "Month":
+        from = DateTime(now.year, now.month, 1); // Start of the month
+        to = DateTime(now.year, now.month + 1, 0); // End of the month
+        break;
+      case "6M":
+        int currentMonth = now.month;
+        if (currentMonth >= 1 && currentMonth <= 6) {
+          // If in Jan - June, show Jan to June
+          from = DateTime(now.year, 1, 1);
+          to = DateTime(now.year, 6, 30);
+        } else {
+          // If in July - Dec, show July to Dec
+          from = DateTime(now.year, 7, 1);
+          to = DateTime(now.year, 12, 31);
+        }
+        break;
+      case "Year":
+        from = DateTime(now.year, 1, 1); // Start from Jan 1 of current year
+        to = DateTime(now.year, 12, 31); // End at Dec 31 of current year
+        break;
+      default:
+        from = now.subtract(Duration(days: 7));
+    }
+
+    String formattedFromDate = DateFormat("dd-MM-yyyy").format(from);
+    String formattedToDate = DateFormat("dd-MM-yyyy").format(to);
+
+    print("fromDate - " + formattedFromDate + ", toDate - " + formattedToDate);
+
+    try {
+      Provider.of<WellnessProvider>(context, listen: false).getWellnessDetail(
+        "sleephours",
+        formattedFromDate,
+        formattedToDate,
+      );
+
+      print("Fetching data for: $period"); // Debugging
+      setState(() {
+        selectedPeriod = period; // Ensure UI updates
+      });
+    } catch (e) {
+      print("Error fetching wellness data: $e");
+    }
+  }
+
+  getStepsFromDB() async {
+    var list = await _dbService.getDailyStepsDB();
+    print('steps db: ${list.map((e) => (e.id, e.date, e.steps))}');
+  }
+
+  getDailyStepsData() async {
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await Provider.of<DailyStepsProvider>(context, listen: false).getDailyStepsData(idStr, "09-03-2025", "15-03-2025");
+    } catch(e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage("Failed to get details. Try again. Error: $e");
+    }
   }
 
   Future<void> getUserDetails() async {
@@ -97,8 +200,6 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
   //   prefs.setInt('stepsOffline', currentSteps);
   //   prefs.setInt('baseSteps', savedBaseSteps);
   // }
-
-
 
   /// Handle status changed
   void onPedestrianStatusChanged(PedestrianStatus event) {
@@ -185,6 +286,15 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final wellnessProvider = Provider.of<WellnessProvider>(context);
+    final wellnessData = wellnessProvider.wellnessData;
+
+    // Filter only valid data (sleepHours > 0)
+    List<WellnessDetail> filteredData =
+        wellnessData?.details.where((entry) => entry.dailySteps > 0).toList() ??
+            [];
+
     return Scaffold(
       backgroundColor: appBackground,
       appBar: MainAppBar(),
@@ -198,7 +308,7 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
             ),
 
             Padding(
-            padding: const EdgeInsets.all(15.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
                 SizedBox(height: 20),
@@ -207,7 +317,10 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
                     items: [
                       IconButton(
                           onPressed: () {
-
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => DailyStepsPage()), // Reload the same screen
+                            );
                           },
                           icon: Icon(Icons.refresh, size: 30, color: appthemeDark)
                       ),
@@ -231,6 +344,17 @@ class _DailyStepsPageState extends State<DailyStepsPage> {
                   ),
                 ),
 
+                SizedBox(
+                  height: 320,
+                  width: double.infinity,
+                  child: GraphWidget(
+                    wellnessData: filteredData ?? [],
+                    selectedPeriod: selectedPeriod, // Pass selected period
+                    onPeriodChange: _fetchData, // Pass the function to update API
+                    module: 'dailysteps',
+
+                  ),
+                ),
                 // SizedBox(height: 20),
                 // HistoryTitleWidget(
                 //     title: 'History',

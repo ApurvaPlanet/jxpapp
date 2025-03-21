@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:jxp_app/widgets/main_app_bar.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/blur_loader.dart';
@@ -124,6 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           Provider.of<AuthProvider>(context, listen: false).notify2Listeners();
+          Navigator.of(context).pushAndRemoveUntil(  MaterialPageRoute(builder: (context) => const BottomNavBar()),      (route) => false,);
         }
 
       } catch (e) {
@@ -147,11 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Image.asset('assets/ocs_logo.png', height: 40),
-      ),
+      appBar: MainAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
