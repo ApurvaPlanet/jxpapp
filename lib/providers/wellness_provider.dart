@@ -2,30 +2,44 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+
 import 'package:jxp_app/models/bmi_response.dart';
+import 'package:jxp_app/models/schedule_response.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:jxp_app/models/wellness_response.dart';
 
+import '../models/wellness_response.dart';
 import '../services/api_interceptor.dart';
 
 class WellnessProvider with ChangeNotifier{
 
   final Dio _dio = Dio();
   bool _isLoading = false;
-  // WellnessData? _wellnessData;
+
+  WellnessData? _wellnessData;
   BmiResponse? bmiResponse;
+  ScheduleResponse? scheduleResponse;
 
   WellnessProvider(){
     _dio.interceptors.add(ApiInterceptor(_dio)); // Attach interceptor
   }
 
-  // WellnessData? get wellnessData => _wellnessData;
+   WellnessData? get wellnessData => _wellnessData;
+
   bool get isLoading => _isLoading;
+
+  ScheduleResponse? get scheduleData => scheduleResponse;
 
   Future<Response> _apiCall(String endpoint, Object data) async {
     return await _dio.post("/$endpoint", data: data); // Ensure leading slash
   }
 
-  Future<void> getWellnessDetail (int id, String action, String from, String to) async{
+  Future<void> getWellnessDetail (String action, String from, String to) async{
+
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+
     _isLoading = true;
     notifyListeners();
 
@@ -38,7 +52,9 @@ class WellnessProvider with ChangeNotifier{
       });
 
       if (response.statusCode == 200) {
-        // _wellnessData = WellnessData.fromJson(response.data);
+
+         _wellnessData = WellnessData.fromJson(response.data);
+
       } else {
         throw Exception("Server Error");
       }
@@ -50,6 +66,7 @@ class WellnessProvider with ChangeNotifier{
     _isLoading = false;
     notifyListeners();
   }
+
 
   Future<void> getBMIDetail (int id, String action) async{
     _isLoading = true;
@@ -74,4 +91,99 @@ class WellnessProvider with ChangeNotifier{
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> getScheduleDetails () async{
+
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+
+    _isLoading = true;
+    notifyListeners();
+
+    try{
+      final response = await _apiCall("getschedule", {
+        "id": '391'
+      });
+
+      if (response.statusCode == 200) {
+        scheduleResponse = ScheduleResponse.fromJson(response.data);
+      } else {
+        throw Exception("Server Error");
+      }
+
+    }catch(e){
+      throw Exception("getScheduleDetails api Error: $e");
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> saveHours(String module, String timeValue) async {
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final requestBody = {
+        "id": '391',
+        if (module == 'sleephours') "sleepTime": timeValue, // Pass time as string
+        if (module == 'standhours') "standHour": timeValue, // Stand hours as string
+        if (module == 'activehours') "activeHour": timeValue // Active hours as string
+      };
+
+      final response = await _apiCall("setschedule", requestBody);
+
+      if (response.statusCode == 200) {
+        debugPrint("Hours saved successfully.");
+      } else {
+        debugPrint("Failed to save hours.");
+      }
+    } catch (e) {
+      debugPrint("Error saving hours: $e");
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> editHours(int wellnessId, String module, String wakeupTime, int dailySteps, double standHours, double activeHours, String sleepTime, double sleepHours) async {
+    var prefs = await SharedPreferences.getInstance();
+    var idStr = prefs.get('userId').toString();
+    var id = int.parse(idStr);
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final requestBody = {
+        "id": '391',
+        "wellnessId": wellnessId,
+        "wakeupTime": wakeupTime,
+        "dailySteps": dailySteps,
+        "standHours": standHours,
+        "activityHours": activeHours,
+        "sleepTime":sleepTime,
+        "sleepHours":sleepHours
+      };
+
+      final response = await _apiCall("setwellnessdetails", requestBody);
+
+      if (response.statusCode == 200) {
+        debugPrint("Hours saved successfully.");
+      } else {
+        debugPrint("Failed to save hours.");
+      }
+    } catch (e) {
+      debugPrint("Error saving hours: $e");
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
 }

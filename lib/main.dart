@@ -6,6 +6,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:jxp_app/providers/wellness_provider.dart';
 import 'package:pedometer/pedometer.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import './providers/auth_provider.dart';
@@ -14,11 +15,25 @@ import './widgets/bottom_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  requestNotificationPermission();
   await initializeService();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? userId = prefs.getString('userId');
 
   runApp(MyApp(isLoggedIn: userId != null));
+}
+
+void requestNotificationPermission() async {
+  var status = await Permission.notification.request();
+
+  if (status.isDenied) {
+    print("Notification permission denied!");
+  } else if (status.isPermanentlyDenied) {
+    print("Notification permission permanently denied. Open settings.");
+    openAppSettings(); // Opens device settings
+  } else {
+    print("Notification permission granted!");
+  }
 }
 
 // Notification Config
@@ -75,28 +90,43 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
-
   final prefs = await SharedPreferences.getInstance();
 
+  if (service is AndroidServiceInstance) {
+    service.setAsForegroundService();
+
+    flutterLocalNotificationsPlugin.show(
+      notificationId,
+      'Step Tracker Running',
+      'Tracking your steps...',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          notificationChannelId,
+          'Step Tracker',
+          icon: 'ic_bg_service_small',
+          ongoing: true,
+          importance: Importance.high, // Ensure notification is shown
+          priority: Priority.high, // High priority notification
+        ),
+      ),
+    );
+  }
+
+  // Listen to Step Count
   stepSubscription = Pedometer.stepCountStream.listen((StepCount event) async {
-    // Get stored steps and last update date
     int savedSteps = prefs.getInt('stepsOffline') ?? 0;
     String? lastUpdatedDate = prefs.getString('lastStepDate');
-
-    // Get current date
     String today = DateTime.now().toIso8601String().substring(0, 10);
 
-    // Reset steps if a new day has started
     if (lastUpdatedDate == null || lastUpdatedDate != today) {
       savedSteps = 0;
     }
 
-    // Update steps
     int newSteps = savedSteps + event.steps;
     await prefs.setInt('stepsOffline', newSteps);
     await prefs.setString('lastStepDate', today);
 
-    // Show notification
+    // Update Foreground Notification
     flutterLocalNotificationsPlugin.show(
       notificationId,
       'Steps Updated',
@@ -106,7 +136,7 @@ void onStart(ServiceInstance service) async {
           notificationChannelId,
           'Step Tracker',
           icon: 'ic_bg_service_small',
-          ongoing: false,
+          ongoing: true,
         ),
       ),
     );
@@ -122,40 +152,6 @@ void onStart(ServiceInstance service) async {
   });
 }
 
-// @pragma('vm:entry-point')
-// void onStart(ServiceInstance service) async {
-//   DartPluginRegistrant.ensureInitialized();
-//
-//   final prefs = await SharedPreferences.getInstance();
-//
-//   stepSubscription = Pedometer.stepCountStream.listen((StepCount event) async {
-//     int steps = (prefs.getInt('stepsOffline') ?? 0) + event.steps;
-//     await prefs.setInt('stepsOffline', steps);
-//
-//     flutterLocalNotificationsPlugin.show(
-//       notificationId,
-//       'Steps Updated',
-//       'Total steps: $steps',
-//       const NotificationDetails(
-//         android: AndroidNotificationDetails(
-//           notificationChannelId,
-//           'Step Tracker',
-//           icon: 'ic_bg_service_small',
-//           ongoing: false,
-//         ),
-//       ),
-//     );
-//   });
-//
-//   service.on("stop").listen((event) {
-//     service.stopSelf();
-//     print("Background process stopped.");
-//   });
-//
-//   service.on("start").listen((event) {
-//     print("Service restarted.");
-//   });
-// }
 
 // Start and Stop Service
 void startBackgroundService() {
@@ -189,5 +185,11 @@ class MyApp extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void requestNotificationPermission() async {
+    if (await Permission.notification.request().isDenied) {
+      print("Notification permission denied!");
+    }
   }
 }

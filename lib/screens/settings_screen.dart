@@ -181,7 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const Text('      Version:', style: TextStyle(fontSize: 18),),
         const SizedBox(width: 5),
         Text(
-          appVersion,
+          getAppVersion(),
           style: const TextStyle(fontSize: 18),
         ),
       ],

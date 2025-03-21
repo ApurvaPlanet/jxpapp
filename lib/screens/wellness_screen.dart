@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:jxp_app/screens/Wellness/active_hours_Screen.dart';
 import 'package:jxp_app/screens/Wellness/daily_steps_screen.dart';
+import 'package:jxp_app/screens/Wellness/sleep_wellness_Screen.dart';
+import 'package:jxp_app/screens/Wellness/stand_hours_screen.dart';
 
 import '../constants/app_constants.dart';
 import '../widgets/main_app_bar.dart';
@@ -14,13 +17,15 @@ class WellnessScreen extends StatefulWidget {
 }
 
 class _WellnessScreenState extends State<WellnessScreen> {
-
   final List<Map<String, String>> modules = [
     {'image': 'assets/WellnessModules/Daily Steps.png', 'text': 'Daily Steps'},
     {'image': 'assets/WellnessModules/BMI.png', 'text': 'BMI'},
-    // {'image': 'assets/WellnessModules/Sleep.png', 'text': 'Sleep'},
-    // {'image': 'assets/WellnessModules/Active Hours.png', 'text': 'Active Hours'},
-    // {'image': 'assets/WellnessModules/Stand Hours.png', 'text': 'Stand Hours'},
+    {'image': 'assets/WellnessModules/Sleep.png', 'text': 'Sleep'},
+    {
+      'image': 'assets/WellnessModules/Active Hours.png',
+      'text': 'Active Hours',
+    },
+    {'image': 'assets/WellnessModules/Stand Hours.png', 'text': 'Stand Hours'},
   ];
 
   @override
@@ -33,7 +38,7 @@ class _WellnessScreenState extends State<WellnessScreen> {
           children: [
             // Banner with Text Overlay
             const SubAppBar(pageTitle: 'Wellness'),
-        
+
             // GridView inside Expanded to prevent layout errors
             Expanded(
               child: Padding(
@@ -52,17 +57,22 @@ class _WellnessScreenState extends State<WellnessScreen> {
                         children: [
                           Expanded(
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10), // Optional rounded corners
+                              borderRadius: BorderRadius.circular(10),
+                              // Optional rounded corners
                               child: Image.asset(
                                 modules[index]['image']!,
-                                fit: BoxFit.cover, // Ensures it fills the square
+                                fit:
+                                    BoxFit.cover, // Ensures it fills the square
                               ),
                             ),
                           ),
                           // const SizedBox(height: 5),
                           Text(
                             modules[index]['text']!,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -72,21 +82,44 @@ class _WellnessScreenState extends State<WellnessScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const DailyStepsPage()),
+                                builder: (context) => const DailyStepsPage(),
+                              ),
                             );
                             break;
                           case 'BMI':
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const BmiScreen()),
+                                builder: (context) => const BmiScreen(),
+                              ),
                             );
                             break;
                           case 'Sleep':
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const SleepWellnessScreen(),
+                              ),
+                            );
                             break;
                           case 'Active Hours':
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const ActiveHoursScreen(),
+                              ),
+                            );
                             break;
                           case 'Stand Hours':
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const StandHoursScreen(),
+                              ),
+                            );
                             break;
                           default:
                             break;
