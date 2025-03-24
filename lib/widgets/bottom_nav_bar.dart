@@ -74,12 +74,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
       key: _scaffoldKey,
       bottomNavigationBar: ConvexAppBar(
         initialActiveIndex: 1,
-        style: TabStyle.fixed,
-        backgroundColor: appthemeDark,
+        style: TabStyle.react,
+        backgroundColor: appthemeLight,
         items: [
-          TabItem(icon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white54), title: '', activeIcon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white)),
-          TabItem(icon: Image.asset('assets/BottomBar/home.png')),
-          TabItem(icon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white54), title: '', activeIcon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white)),
+          TabItem(icon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white), title: '', activeIcon: Image.asset('assets/BottomBar/Wellness.png', color: Colors.white)),
+          TabItem(icon: Image.asset('assets/BottomBar/home.png'), ),
+          TabItem(icon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white), title: '', activeIcon: Image.asset('assets/BottomBar/Settings.png', color: Colors.white)),
         ],
         onTap: _onItemTapped,
       ),

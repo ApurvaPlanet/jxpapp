@@ -106,7 +106,6 @@ class _SleepWellnessState extends State<SleepWellnessScreen> {
         automaticallyImplyLeading: false,
         title: Image.asset('assets/jxp_logo.png', height: 40),
       ),
-      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Column(
