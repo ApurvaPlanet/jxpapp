@@ -51,6 +51,13 @@ class _EditRecordState extends State<EditRecord> {
       activeHourController.text = widget.wellnessDetail.activityHours.toString();
       standHourController.text = widget.wellnessDetail.standHours.toString();
 
+      // Add listeners to update total hours when inputs change
+      input1Controller.addListener(_updateTotalHours);  // For standhours & activehours
+      input2Controller.addListener(_updateTotalHours);  // For sleephours
+      sleepHourController.addListener(_updateTotalHours);
+      activeHourController.addListener(_updateTotalHours);
+      standHourController.addListener(_updateTotalHours);
+
       // Delay to ensure UI updates properly
       Future.delayed(Duration.zero, _updateTotalHours);
     }
@@ -59,6 +66,13 @@ class _EditRecordState extends State<EditRecord> {
 
   @override
   void dispose() {
+
+    input1Controller.removeListener(_updateTotalHours);
+    input2Controller.removeListener(_updateTotalHours);
+    sleepHourController.removeListener(_updateTotalHours);
+    activeHourController.removeListener(_updateTotalHours);
+    standHourController.removeListener(_updateTotalHours);
+
     input1Controller.dispose();
     input2Controller.dispose();
     sleepHourController.dispose();
@@ -83,6 +97,9 @@ class _EditRecordState extends State<EditRecord> {
             readOnly: isTimePicker, // Only time pickers should be read-only
             keyboardType: isTimePicker ? null : TextInputType.number, // Enable number keyboard if not time picker
             onTap: isTimePicker ? () => _selectTime(context, tec) : null,
+            onChanged: (value) {  // Ensure updates trigger total hours update
+              _updateTotalHours();
+            },
 
           ),
         ),
@@ -196,13 +213,20 @@ class _EditRecordState extends State<EditRecord> {
     double activeHours = _parseHours(activeHourController.text);
     double standHours = _parseHours(standHourController.text);
 
+    // Include input1Controller if module is standhours or activehours
+    if (widget.module == 'standhours') {
+      standHours = _parseHours(input1Controller.text);
+    } else if (widget.module == 'activehours') {
+      activeHours = _parseHours(input1Controller.text);
+    }
+
     // Calculate total hours
     double totalHours = sleepHours + activeHours + standHours;
 
     // Ensure totalHours does not exceed 24
-    if (totalHours > 24) {
+    /*if (totalHours > 24) {
       totalHours = 24;
-    }
+    }*/
 
     // Convert totalHours back to HH:mm format
     int totalHrs = totalHours.floor();
@@ -341,16 +365,42 @@ class _EditRecordState extends State<EditRecord> {
                       _updateTotalHours(); // Update the total hours first
 
                       if (totalHoursString == "24:00") {
-                        _saveHoursToAPI(
-                          widget.wellnessDetail.wellnessId,
-                          widget.module,
-                          input2Controller.text,
-                          0,
-                          double.parse(standHourController.text),
-                          double.parse(activeHourController.text),
-                          input1Controller.text,
-                          double.parse(sleepHourController.text),
-                        );
+                        if(widget.module == 'standhours'){
+                          _saveHoursToAPI(
+                            widget.wellnessDetail.wellnessId,
+                            widget.module,
+                            '',
+                            0,
+                            double.parse(input1Controller.text),
+                            double.parse(activeHourController.text),
+                            '',
+                            double.parse(sleepHourController.text),
+                          );
+                        }else if(widget.module == 'activehours'){
+                          _saveHoursToAPI(
+                            widget.wellnessDetail.wellnessId,
+                            widget.module,
+                            '',
+                            0,
+                            double.parse(standHourController.text),
+                            double.parse(input1Controller.text),
+                            '',
+                            double.parse(sleepHourController.text),
+                          );
+                        }else {
+                          //sleephours
+                          _saveHoursToAPI(
+                            widget.wellnessDetail.wellnessId,
+                            widget.module,
+                            input2Controller.text,
+                            0,
+                            double.parse(standHourController.text),
+                            double.parse(activeHourController.text),
+                            input1Controller.text,
+                            double.parse(sleepHourController.text),
+                          );
+                        }
+
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Total hours must be 24 to save!")),

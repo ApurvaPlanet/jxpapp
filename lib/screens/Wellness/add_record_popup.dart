@@ -56,11 +56,22 @@ class _AddRecordState extends State<AddRecordPopup> {
               _saveHoursForSleepModule();
             });
           }
-        } else if (widget.module == 'standhours' || widget.module == 'activehours') {
+        } else if (widget.module == 'activehours') {
           if (scheduleData != null && scheduleData.wakeupTime != null && scheduleData.sleepTime != null) {
             double awakeDuration = calculateHoursBetween(scheduleData.wakeupTime!, scheduleData.sleepTime!);
 
             setState(() {
+              hourController.text = scheduleData.activityHours.toString();
+              timeController.text = awakeDuration.toStringAsFixed(1);
+              _saveHoursForStandModule();
+            });
+          }
+        }  else if (widget.module == 'standhours') {
+          if (scheduleData != null && scheduleData.wakeupTime != null && scheduleData.sleepTime != null) {
+            double awakeDuration = calculateHoursBetween(scheduleData.wakeupTime!, scheduleData.sleepTime!);
+
+            setState(() {
+              hourController.text = scheduleData.standHours.toString();
               timeController.text = awakeDuration.toStringAsFixed(1);
               _saveHoursForStandModule();
             });
@@ -73,9 +84,22 @@ class _AddRecordState extends State<AddRecordPopup> {
   }
 
   Future<void> _selectTime(BuildContext context, TextEditingController tec) async {
+
+    // Parse existing time from the controller or use current time
+    TimeOfDay initialTime;
+    if (tec.text.isNotEmpty) {
+      List<String> parts = tec.text.split(":");
+      int hour = int.tryParse(parts[0]) ?? 0;
+      int minute = int.tryParse(parts[1]) ?? 0;
+      initialTime = TimeOfDay(hour: hour, minute: minute);
+    } else {
+      initialTime = TimeOfDay.now();
+    }
+
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: initialTime,
+      initialEntryMode: TimePickerEntryMode.input,
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
