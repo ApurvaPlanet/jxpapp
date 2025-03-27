@@ -409,6 +409,8 @@ class _GraphWidgetState extends State<GraphWidget> {
   }*/
 
   double _getMaxY() {
+    if (_sleepData.isEmpty) return 10; // Default case
+
     double maxY = 0;
 
     for (var data in _sleepData) {
@@ -428,7 +430,16 @@ class _GraphWidgetState extends State<GraphWidget> {
       }
     }
 
-    return (maxY / 10).ceil() * 10; // Rounds up to the nearest 10
+    // Adjust maxY dynamically based on value magnitude
+    double stepSize = maxY < 10 ? 5 : 10; // Round small values to 1, large values to 10
+    double adjustedMaxY = ((maxY / stepSize).ceil()) * stepSize;
+
+    // Dynamic padding for 6M and Year to prevent bars from going outside
+    if (selectedPeriod == '6M' || selectedPeriod == 'Year') {
+      adjustedMaxY = ((maxY * 2) / stepSize).ceil() * stepSize; // Add 10% buffer
+    }
+
+    return adjustedMaxY > 0 ? adjustedMaxY : 10; // Ensure a minimum maxY of 10
   }
 
 
