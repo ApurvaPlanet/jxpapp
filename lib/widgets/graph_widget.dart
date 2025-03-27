@@ -554,8 +554,9 @@ class _GraphWidgetState extends State<GraphWidget> {
             child: Padding(
               padding: EdgeInsets.all(20.0),
               child: Text(
-                "No data available for the selected period.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                "No data yet! \n Tap + to set your schedule and \nstart tracking wellness.",
+                style: TextStyle(fontSize: 16, color: Colors.grey, ),
+                textAlign: TextAlign.center,
               ),
             ),
           )
