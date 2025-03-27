@@ -120,7 +120,7 @@ class WellnessProvider with ChangeNotifier{
     notifyListeners();
   }
 
-  Future<void> saveHours(String module, String timeValue) async {
+  Future<void> saveHours(String module, String timeValue, String wakeupTime, String sleepHours) async {
     var prefs = await SharedPreferences.getInstance();
     var idStr = prefs.get('userId').toString();
     var id = int.parse(idStr);
@@ -131,9 +131,9 @@ class WellnessProvider with ChangeNotifier{
     try {
       final requestBody = {
         "id": id,
-        if (module == 'sleephours') "sleepTime": timeValue, // Pass time as string
-        if (module == 'standhours') "standHour": timeValue, // Stand hours as string
-        if (module == 'activehours') "activeHour": timeValue // Active hours as string
+        if (module == 'sleephours') "sleepTime": timeValue, "wakeupTime": wakeupTime, "sleepHours": sleepHours,// Pass time as string
+        if (module == 'standhours') "standHours": timeValue, // Stand hours as string
+        if (module == 'activehours') "activityHours": timeValue // Active hours as string
       };
 
       final response = await _apiCall("setschedule", requestBody);

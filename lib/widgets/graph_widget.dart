@@ -108,11 +108,30 @@ class _GraphWidgetState extends State<GraphWidget> {
             ],
           ),
         );
-      }else {
+      }else if (module == 'sleephours'){
         double sleepHours = _sleepData.firstWhere(
               (entry) => DateFormat("yyyy-MM-dd").format(entry.date) == DateFormat("yyyy-MM-dd").format(date),
           orElse: () => WellnessDetail(date: date, sleepHours: 0, wakeupTime: '', dailySteps: 0, standHours: 0, activityHours: 0, sleepTime: '', wellnessId: 0),
         ).sleepHours;
+
+        data.add(
+          BarChartGroupData(
+            x: availableDates.indexOf(date), // Ensure proper indexing
+            barRods: [
+              BarChartRodData(
+                toY: sleepHours,
+                width: 10,
+                color: graphBarColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        );
+      }else if (module == 'dailysteps'){
+        double sleepHours = _sleepData.firstWhere(
+              (entry) => DateFormat("yyyy-MM-dd").format(entry.date) == DateFormat("yyyy-MM-dd").format(date),
+          orElse: () => WellnessDetail(date: date, sleepHours: 0, wakeupTime: '', dailySteps: 0, standHours: 0, activityHours: 0, sleepTime: '', wellnessId: 0),
+        ).dailySteps.toDouble();
 
         data.add(
           BarChartGroupData(
@@ -182,11 +201,30 @@ class _GraphWidgetState extends State<GraphWidget> {
             ],
           ),
         );
-      }else {
+      }else if(module == 'sleephours') {
         double sleepHours = _sleepData.firstWhere(
               (entry) => DateFormat("yyyy-MM-dd").format(entry.date) == DateFormat("yyyy-MM-dd").format(date),
           orElse: () => WellnessDetail(date: date, sleepHours: 0, wakeupTime: '', dailySteps: 0, standHours: 0, activityHours: 0, sleepTime: '', wellnessId: 0),
         ).sleepHours;
+
+        data.add(
+          BarChartGroupData(
+            x: availableDates.indexOf(date),
+            barRods: [
+              BarChartRodData(
+                toY: sleepHours,
+                width: 10,
+                color: graphBarColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        );
+      }else if(module == 'dailysteps') {
+        double sleepHours = _sleepData.firstWhere(
+              (entry) => DateFormat("yyyy-MM-dd").format(entry.date) == DateFormat("yyyy-MM-dd").format(date),
+          orElse: () => WellnessDetail(date: date, sleepHours: 0, wakeupTime: '', dailySteps: 0, standHours: 0, activityHours: 0, sleepTime: '', wellnessId: 0),
+        ).dailySteps.toDouble();
 
         data.add(
           BarChartGroupData(
@@ -226,8 +264,10 @@ class _GraphWidgetState extends State<GraphWidget> {
           sixMonthSleepData[monthLabel] = (sixMonthSleepData[monthLabel] ?? 0) + entry.activityHours;
         }else if(module == 'standhours'){
           sixMonthSleepData[monthLabel] = (sixMonthSleepData[monthLabel] ?? 0) + entry.standHours;
-        }else {
+        }else if(module == 'sleephours'){
           sixMonthSleepData[monthLabel] = (sixMonthSleepData[monthLabel] ?? 0) + entry.sleepHours;
+        }else if(module == 'dailysteps'){
+          sixMonthSleepData[monthLabel] = (sixMonthSleepData[monthLabel] ?? 0) + entry.dailySteps;
         }
       }
     }
@@ -263,8 +303,10 @@ class _GraphWidgetState extends State<GraphWidget> {
         yearlySleepData[monthLabel] = (yearlySleepData[monthLabel] ?? 0) + entry.standHours;
       }else if(module == 'activehours'){
         yearlySleepData[monthLabel] = (yearlySleepData[monthLabel] ?? 0) + entry.activityHours;
-      } else{
+      } else if(module == 'sleephours'){
         yearlySleepData[monthLabel] = (yearlySleepData[monthLabel] ?? 0) + entry.sleepHours;
+      } else if(module == 'dailysteps'){
+        yearlySleepData[monthLabel] = (yearlySleepData[monthLabel] ?? 0) + entry.dailySteps;
       }
     }
 
@@ -366,6 +408,30 @@ class _GraphWidgetState extends State<GraphWidget> {
     });
   }*/
 
+  double _getMaxY() {
+    double maxY = 0;
+
+    for (var data in _sleepData) {
+      double value = 0;
+      if (widget.module == 'standhours') {
+        value = data.standHours;
+      } else if (widget.module == 'activehours') {
+        value = data.activityHours;
+      } else if (widget.module == 'sleephours') {
+        value = data.sleepHours;
+      } else if (widget.module == 'dailysteps') {
+        value = data.dailySteps.toDouble();
+      }
+
+      if (value > maxY) {
+        maxY = value;
+      }
+    }
+
+    return (maxY / 10).ceil() * 10; // Rounds up to the nearest 10
+  }
+
+
   /// Processes regular data (Day, Week, Month)
   void _prepareRegularChartData(String module) {
     List<BarChartGroupData> data = [];
@@ -399,13 +465,27 @@ class _GraphWidgetState extends State<GraphWidget> {
             ],
           ),
         );
-      }else {
+      }else if(module == 'sleephours'){
         data.add(
           BarChartGroupData(
             x: i,
             barRods: [
               BarChartRodData(
                 toY: _sleepData[i].sleepHours,
+                width: 10,
+                color: graphBarColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        );
+      }else if(module == 'dailysteps'){
+        data.add(
+          BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: _sleepData[i].dailySteps.toDouble(),
                 width: 10,
                 color: graphBarColor,
                 borderRadius: BorderRadius.circular(4),
@@ -487,6 +567,7 @@ class _GraphWidgetState extends State<GraphWidget> {
               height: 255, // Restrict graph height
               child: BarChart(
                 BarChartData(
+                  maxY: _getMaxY(),
                   gridData: FlGridData(show: true),
                   borderData: FlBorderData(show: true),
                   barGroups: _chartData,
@@ -496,12 +577,27 @@ class _GraphWidgetState extends State<GraphWidget> {
                     rightTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 30, // Space for text
+                        reservedSize: 40, // Space for text
                         getTitlesWidget: (value, meta) {
-                          return Text(
-                            " ${value.toInt()}", // Right Y-axis labels
-                            style: TextStyle(fontSize: 12), // Change size & color
-                          );
+
+                          // Determine if rotation is needed (Rotate if more than 10 bars)
+                          bool shouldRotate = _chartData.length > 4;
+                          Widget textWidget;
+                          if(widget.module == 'dailysteps'){
+                            textWidget = Text(
+                              formatNumber(value), // Right Y-axis labels
+                              style: TextStyle(fontSize: 12), // Change size & color
+                            );
+                          }else{
+                            textWidget = Text(
+                              " ${value.toInt()}", // Right Y-axis labels
+                              style: TextStyle(fontSize: 12), // Change size & color
+                            );
+                          }
+
+                          return shouldRotate
+                              ? Transform.rotate(angle: -0.4, child: textWidget) // Rotate if needed
+                              : textWidget; // Keep straight if fewer labels
                         },
                       ),
                     ),
@@ -515,23 +611,30 @@ class _GraphWidgetState extends State<GraphWidget> {
                             return const SizedBox(); // Prevents RangeError
                           }
 
+                          // Determine if rotation is needed (Rotate if more than 10 bars)
+                          bool shouldRotate = _chartData.length > 7;
+
+
+                          Widget textWidget;
                           if (selectedPeriod == 'Year') {
-                            /*List<String> months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                            return Text(months[index], style: const TextStyle(fontSize: 12));*/
                             List<String> years = yearlySleepData.keys.toList();
                             if (value.toInt() >= 0 && value.toInt() < years.length) {
-                              return Text(years[value.toInt()], style: TextStyle(fontSize: 12),);
+                              textWidget = Text(years[value.toInt()], style: TextStyle(fontSize: 12),);
                             }else{
-                              return const Text('', style: TextStyle(fontSize: 12),);
+                              return const SizedBox();
                             }
                           } else if (selectedPeriod == '6M') {
                             List<String> periods = sixMonthSleepData.keys.toList();
-                            return index < periods.length ? Text(periods[index], style: const TextStyle(fontSize: 12)) : const SizedBox();
+                            textWidget = index < periods.length ? Text(periods[index], style: const TextStyle(fontSize: 12)) : const SizedBox();
                           } else {
                             DateTime itemDate = _sleepData[index].date;
-                            String formattedDate = DateFormat("dd-MM").format(itemDate);
-                            return Text(formattedDate, style: const TextStyle(fontSize: 12));
+                            String formattedDate = DateFormat("dd").format(itemDate);
+                            textWidget = Text(formattedDate, style: const TextStyle(fontSize: 12));
                           }
+
+                          return shouldRotate
+                              ? Transform.rotate(angle: -0.4, child: textWidget) // Rotate only if needed
+                              : textWidget; // Keep straight if fewer bars
                         },
                        /* getTitlesWidget: (value, meta) {
                           if (selectedPeriod == 'Year') {
@@ -562,5 +665,12 @@ class _GraphWidgetState extends State<GraphWidget> {
       ],
     );
 
+  }
+
+  String formatNumber(double value) {
+    if (value >= 1000000000) return "${(value / 1000000000).toStringAsFixed(1)}B"; // Billion
+    if (value >= 1000000) return "${(value / 1000000).toStringAsFixed(1)}M"; // Million
+    if (value >= 1000) return "${(value / 1000).toStringAsFixed(1)}K"; // Thousand
+    return value.toInt().toString(); // Keep as is if <1000
   }
 }

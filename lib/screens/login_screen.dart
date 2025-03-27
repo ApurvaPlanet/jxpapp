@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:jxp_app/widgets/main_app_bar.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_constants.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/blur_loader.dart';
 import '../widgets/bottom_nav_bar.dart';
@@ -129,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
       } catch (e) {
-        _showMessage("Invalid OTP, Try Again. Error: $e");
+        _showMessage("$e");
       }
       setState(() => _isLoading = false);
     } else {
@@ -150,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppBar(),
+      backgroundColor: appBackground,
       body: SingleChildScrollView(
         child: Column(
           children: [

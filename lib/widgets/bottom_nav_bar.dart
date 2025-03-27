@@ -28,9 +28,22 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
 
-  void _onItemTapped(int index) {
+/*  void _onItemTapped(int index) {
     if (_selectedIndex == index && index == 1) {
       setState(() {}); // Force WebView refresh
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+    _controller.jumpToTab(index);
+  }*/
+
+  void _onItemTapped(int index) {
+    print('_selectedIndex: $index');
+    if (_selectedIndex == index && index == 1) {
+      // Force refresh
+      Navigator.of(context).pushAndRemoveUntil(  MaterialPageRoute(builder: (context) => const BottomNavBar()),      (route) => false,);
     } else {
       setState(() {
         _selectedIndex = index;

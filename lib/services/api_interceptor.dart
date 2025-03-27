@@ -3,8 +3,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/app_constants.dart';
+
 class ApiInterceptor extends Interceptor {
-  static const String _baseUrl = "http://sandbox.journeyxpro.com/jxp/mob"; // No trailing slash
+
+  static String _baseUrl = baseUrl;
 
   Dio dio;
 
