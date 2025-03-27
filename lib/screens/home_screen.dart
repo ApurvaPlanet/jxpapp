@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         url =
             prefs.getString('webviewUrl') ??
-            'http://sandbox.journeyxpro.com/jxp/crewlogin/';
+            'https://ocs-icm.journeyxpro.com/jxp/crewlogin/';
         print("URL: $url");
       });
     }

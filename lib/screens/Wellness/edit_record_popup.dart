@@ -94,9 +94,9 @@ class _EditRecordState extends State<EditRecord> {
           width: 130,
           child: TextField(
             controller: tec,
-            readOnly: isTimePicker, // Only time pickers should be read-only
+            readOnly: isTimePicker || (widget.module == 'sleephours' && type == 'Sleep Hour'), // Only time pickers should be read-only
             keyboardType: isTimePicker ? null : TextInputType.number, // Enable number keyboard if not time picker
-            onTap: isTimePicker ? () => _selectTime(context, tec) : null,
+            onTap: type == 'Sleep Hour' ? null : isTimePicker ? () => _selectTime(context, tec) : null,
             onChanged: (value) {  // Ensure updates trigger total hours update
               _updateTotalHours();
             },
@@ -169,7 +169,7 @@ class _EditRecordState extends State<EditRecord> {
       double sleepHours = sleepMinutes / 60.0;
 
       setState(() {
-        sleepHourController.text = formatHoursToHHMM(sleepHours);
+        sleepHourController.text = sleepHours.toString();
         _updateTotalHours();
       });
 
