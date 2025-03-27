@@ -400,25 +400,35 @@ class _EditRecordState extends State<EditRecord> {
                             double.parse(sleepHourController.text),
                           );
                         }
-
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Total hours must be 24 to save!")),
-                        );
+                        /*ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Total hours must be 24 to save")),
+                        );*/
                       }
                     }
 
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  "Total Hours: $totalHoursString hr",
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (totalHoursString != "24:00")
+                        TextSpan(
+                          text: "Total hours must be 24 to proceed.\n",
+                        ),
+                      TextSpan(
+                        text: "Total Hours: $totalHoursString hr",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: totalHoursString == "24:00" ? Colors.green : Colors.red,
                   ),
+                  textAlign: TextAlign.center, // Centers multiline text
                 ),
-
 
               ],
             ),

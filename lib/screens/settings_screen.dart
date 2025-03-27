@@ -61,6 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       child: Scaffold(
+        backgroundColor: appBackground,
         appBar: MainAppBar(),
         body: SafeArea(
           child: Column(

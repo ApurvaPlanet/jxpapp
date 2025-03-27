@@ -26,15 +26,29 @@ class _AddRecordState extends State<AddRecordPopup> {
   var hourController = TextEditingController();
   var timeController = TextEditingController();
   double calculatedHours = 0.0;
+  VoidCallback? _hourListener;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
     _getScheduleData();
+    _hourListener = () {
+      if (widget.module == 'activehours') {
+        _saveHoursForActiveModule();
+      } else if (widget.module == 'standhours') {
+        _saveHoursForStandModule();
+      }
+    };
+
+    hourController.addListener(_hourListener!);
   }
 
   @override
   void dispose() {
+    if (_hourListener != null) {
+      hourController.removeListener(_hourListener!);
+    }
     hourController.dispose();
     timeController.dispose();
     super.dispose();
@@ -42,7 +56,10 @@ class _AddRecordState extends State<AddRecordPopup> {
 
   void _getScheduleData() async {
     try {
-      final wellnessProvider = Provider.of<WellnessProvider>(context, listen: false);
+      final wellnessProvider = Provider.of<WellnessProvider>(
+        context,
+        listen: false,
+      );
       await wellnessProvider.getScheduleDetails();
 
       if (mounted) {
@@ -57,24 +74,36 @@ class _AddRecordState extends State<AddRecordPopup> {
             });
           }
         } else if (widget.module == 'activehours') {
-          if (scheduleData != null && scheduleData.wakeupTime != null && scheduleData.sleepTime != null) {
-            double awakeDuration = calculateHoursBetween(scheduleData.wakeupTime!, scheduleData.sleepTime!);
+          if (scheduleData != null &&
+              scheduleData.wakeupTime != null &&
+              scheduleData.sleepTime != null) {
+            double awakeDuration = calculateHoursBetween(
+              scheduleData.wakeupTime!,
+              scheduleData.sleepTime!,
+            );
 
             setState(() {
               hourController.text = scheduleData.activityHours.toString();
               timeController.text = awakeDuration.toStringAsFixed(1);
-              _saveHoursForStandModule();
             });
+            // Validate immediately after setting initial values
+            _saveHoursForActiveModule();
           }
-        }  else if (widget.module == 'standhours') {
-          if (scheduleData != null && scheduleData.wakeupTime != null && scheduleData.sleepTime != null) {
-            double awakeDuration = calculateHoursBetween(scheduleData.wakeupTime!, scheduleData.sleepTime!);
+        } else if (widget.module == 'standhours') {
+          if (scheduleData != null &&
+              scheduleData.wakeupTime != null &&
+              scheduleData.sleepTime != null) {
+            double awakeDuration = calculateHoursBetween(
+              scheduleData.wakeupTime!,
+              scheduleData.sleepTime!,
+            );
 
             setState(() {
               hourController.text = scheduleData.standHours.toString();
               timeController.text = awakeDuration.toStringAsFixed(1);
-              _saveHoursForStandModule();
             });
+            // Validate immediately after setting initial values
+            _saveHoursForStandModule();
           }
         }
       }
@@ -83,8 +112,10 @@ class _AddRecordState extends State<AddRecordPopup> {
     }
   }
 
-  Future<void> _selectTime(BuildContext context, TextEditingController tec) async {
-
+  Future<void> _selectTime(
+    BuildContext context,
+    TextEditingController tec,
+  ) async {
     // Parse existing time from the controller or use current time
     TimeOfDay initialTime;
     if (tec.text.isNotEmpty) {
@@ -127,31 +158,50 @@ class _AddRecordState extends State<AddRecordPopup> {
 
   void _saveHoursForSleepModule() {
     if (hourController.text.isNotEmpty && timeController.text.isNotEmpty) {
-      double sleepDuration = calculateHoursBetween(hourController.text, timeController.text);
+      double sleepDuration = calculateHoursBetween(
+        hourController.text,
+        timeController.text,
+      );
       setState(() {
-        calculatedHours = 24 - sleepDuration;
+        calculatedHours = sleepDuration;
       });
     }
   }
 
   void _saveHoursForStandModule() {
     if (hourController.text.isNotEmpty && timeController.text.isNotEmpty) {
-      double standingHours = calculateHoursBetween("00:00", hourController.text);
+      double standingHours = double.tryParse(hourController.text) ?? 0.0;
       double awakeHours = double.tryParse(timeController.text) ?? 0.0;
+
+      if (standingHours > awakeHours) {
+        setState(() {
+          errorMessage = "Standing hours cannot exceed awake hours!";
+        });
+        return;
+      }
 
       setState(() {
         calculatedHours = awakeHours - standingHours;
+        errorMessage = null; // Clear the error if input is valid
       });
     }
   }
 
   void _saveHoursForActiveModule() {
     if (hourController.text.isNotEmpty && timeController.text.isNotEmpty) {
-      double activeHours = calculateHoursBetween("00:00", hourController.text);
+      double activeHours = double.tryParse(hourController.text) ?? 0.0;
       double awakeHours = double.tryParse(timeController.text) ?? 0.0;
+
+      if (activeHours > awakeHours) {
+        setState(() {
+          errorMessage = "Active hours cannot exceed awake hours.";
+        });
+        return;
+      }
 
       setState(() {
         calculatedHours = awakeHours - activeHours;
+        errorMessage = null; // Clear the error if input is valid
       });
     }
   }
@@ -189,23 +239,37 @@ class _AddRecordState extends State<AddRecordPopup> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(widget.title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  widget.title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 buildInputData(
                   widget.inputText1,
                   '',
                   hourController,
                   Icons.watch_later,
-                  openTimePicker: widget.module == 'sleephours' || widget.module == 'standhours' || widget.module == 'activehours',
+                  openTimePicker: widget.module == 'sleephours',
                 ),
-                buildInputData(widget.inputText2, '', timeController, Icons.watch_later, readOnly: true),
+                buildInputData(
+                  widget.inputText2,
+                  '',
+                  timeController,
+                  Icons.watch_later,
+                  readOnly: (widget.module == 'activehours' || widget.module == 'standhours'),
+                  openTimePicker: widget.module == 'sleephours',
+                ),
                 const SizedBox(height: 30),
                 GestureDetector(
                   child: Container(
                     height: 40,
                     child: Center(
                       child: Text(
-                        'Save Hours: ${calculatedHours.toStringAsFixed(1)}',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        widget.module == 'sleephours'? 'Save Sleep Hours : ${calculatedHours.toStringAsFixed(1)}' : 'Save',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     decoration: BoxDecoration(
@@ -214,25 +278,63 @@ class _AddRecordState extends State<AddRecordPopup> {
                     ),
                   ),
                   onTap: () async {
-                    final wellnessProvider = Provider.of<WellnessProvider>(context, listen: false);
-
-                    debugPrint("HourController Value Before Sending: '${hourController.text}'");
-
-                    if (hourController.text.trim().isNotEmpty) {
-                      await wellnessProvider.saveHours(widget.module, hourController.text.trim());
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Hours saved successfully!"))
+                    if(errorMessage == null){
+                      final wellnessProvider = Provider.of<WellnessProvider>(
+                        context,
+                        listen: false,
                       );
 
-                      Navigator.of(context).pop(); // Close the dialog after saving
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Invalid input. Please enter a valid time."))
+                      debugPrint(
+                        "HourController Value Before Sending: '${hourController.text}'",
                       );
+
+                      if (hourController.text.trim().isNotEmpty) {
+                        if(widget.module == 'sleephours'){
+                          await wellnessProvider.saveHours(
+                            widget.module,
+                            hourController.text.trim(),
+                            timeController.text.trim(),
+                            calculatedHours.toString()
+                          );
+                        }else{
+                          await wellnessProvider.saveHours(
+                            widget.module,
+                            hourController.text.trim(),
+                            "",
+                            ""
+                          );
+                        }
+
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Hours saved successfully")),
+                        );
+
+                        Navigator.of(
+                          context,
+                        ).pop(); // Close the dialog after saving
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Invalid input. Please enter a valid time.",
+                            ),
+                          ),
+                        );
+                      }
                     }
                   },
                 ),
+                const SizedBox(height: 10),
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      errorMessage!,
+                      style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
               ],
             ),
           ),
@@ -251,7 +353,7 @@ class _AddRecordState extends State<AddRecordPopup> {
     );
   }
 
-  buildInputData(String type, String measure, TextEditingController tec, IconData? icon, {bool readOnly = false, bool openTimePicker = false}) {
+buildInputData(String type, String measure, TextEditingController tec, IconData? icon, {bool readOnly = false, bool openTimePicker = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -263,11 +365,13 @@ class _AddRecordState extends State<AddRecordPopup> {
           width: 130,
           child: TextField(
             controller: tec,
-            readOnly: true, // Always read-only
+            readOnly: openTimePicker ? true : readOnly, // Always read-only
             onTap: openTimePicker ? () => _selectTime(context, tec) : null,
-
+            keyboardType: openTimePicker ? null : TextInputType.numberWithOptions(decimal: true),
           ),
         ),
+
+
 
         // Icon placed outside the TextField (Right Side)
         if (icon != null)

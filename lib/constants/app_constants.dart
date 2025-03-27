@@ -11,6 +11,9 @@ var btnsColor = const Color(0xFF237bad);
 var graphBarColor = const Color(0xFFA3C8DE);
 var darkGrayColor = const Color(0xFF818599);
 
+var sandboxBaseUrl = "http://sandbox.journeyxpro.com/jxp/mob";
+var baseUrl = "https://ocs-icm.journeyxpro.com/jxp/mob";
+
 var iosVersion = 'v1.0.1';
 var androidVersion = 'v1.0.3';
 
