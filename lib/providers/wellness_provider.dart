@@ -122,26 +122,35 @@ class WellnessProvider with ChangeNotifier{
 
   Future<void> saveHours(String module, String timeValue, String wakeupTime, String sleepHours) async {
     var prefs = await SharedPreferences.getInstance();
-    var idStr = prefs.get('userId').toString();
-    var id = int.parse(idStr);
+    var idStr = prefs.getString('userId') ?? "0";
+    var id = int.tryParse(idStr) ?? 0;
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      final requestBody = {
+      final Map<String, dynamic> requestBody = {
         "id": id,
-        if (module == 'sleephours') "sleepTime": timeValue, "wakeupTime": wakeupTime, "sleepHours": sleepHours,// Pass time as string
-        if (module == 'standhours') "standHours": timeValue, // Stand hours as string
-        if (module == 'activehours') "activityHours": timeValue // Active hours as string
       };
+
+      if (module == 'sleephours') {
+        requestBody.addAll({
+          "sleepTime": timeValue,
+          "wakeupTime": wakeupTime,
+          "sleepHours": sleepHours,
+        });
+      } else if (module == 'standhours') {
+        requestBody["standHours"] = timeValue;
+      } else if (module == 'activehours') {
+        requestBody["activityHours"] = timeValue;
+      }
 
       final response = await _apiCall("setschedule", requestBody);
 
       if (response.statusCode == 200) {
         debugPrint("Hours saved successfully.");
       } else {
-        debugPrint("Failed to save hours.");
+        debugPrint("Failed to save hours. ");
       }
     } catch (e) {
       debugPrint("Error saving hours: $e");
@@ -150,6 +159,7 @@ class WellnessProvider with ChangeNotifier{
     _isLoading = false;
     notifyListeners();
   }
+
 
   Future<void> editHours(int wellnessId, String module, String wakeupTime, int dailySteps, double standHours, double activeHours, String sleepTime, double sleepHours) async {
     var prefs = await SharedPreferences.getInstance();

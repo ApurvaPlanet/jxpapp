@@ -15,7 +15,7 @@ var sandboxBaseUrl = "http://sandbox.journeyxpro.com/jxp/mob";
 var baseUrl = "https://ocs-icm.journeyxpro.com/jxp/mob";
 
 var iosVersion = 'v1.0.1';
-var androidVersion = 'v1.0.3';
+var androidVersion = 'v1.0.4';
 
 String getAppVersion() {
   if (Platform.isIOS) {

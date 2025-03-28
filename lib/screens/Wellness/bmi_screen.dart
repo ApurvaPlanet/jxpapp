@@ -6,6 +6,7 @@ import 'package:jxp_app/widgets/HistoryTitleWidget.dart';
 import 'package:jxp_app/widgets/main_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../constants/app_constants.dart';
 import '../../widgets/blur_loader.dart';
@@ -26,6 +27,11 @@ class _BmiScreenState extends State<BmiScreen> {
   String bmiResult = "";
 
   bool _isLoading = false;
+
+  final Uri _url = Uri.parse('https://www.who.int/europe/news-room/fact-sheets/item/a-healthy-lifestyle---who-recommendations');
+
+  String height = '';
+  String weight = '';
 
   @override
   void initState() {
@@ -49,6 +55,9 @@ class _BmiScreenState extends State<BmiScreen> {
       setState(() {
         heightController.text = '${bmiResponse?.height}';
         weightController.text = '${bmiResponse?.weight}';
+
+        height = '${bmiResponse?.height}';
+        weight = '${bmiResponse?.weight}';
         _isLoading = false;
       });
       calculateBMI();
@@ -71,101 +80,142 @@ class _BmiScreenState extends State<BmiScreen> {
       appBar: MainAppBar(),
       body: SingleChildScrollView(
         child: Stack(
-          children:[
-            Column(
-            children: [
-              const SubAppBar(pageTitle: 'BMI', showBackBtn: true,),
+            children:[
+              Column(
+                children: [
+                  const SubAppBar(pageTitle: 'BMI', showBackBtn: true,),
 
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    HistoryTitleWidget(
-                      title: "BMI Calculator",
-                      items: [
-                        IconButton(icon: Icon(Icons.refresh), onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => BmiScreen()), // Reload the same screen
-                          );
-                        }),
-                      ],
-                    ),
-
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white, // background color
-                        borderRadius: BorderRadius.circular(5), // corner radius
-                      ),
-                      child: Column(
-                        children: [
-                          buildInputData('Height', 'Cm', heightController),
-                          const SizedBox(height: 15),
-                          buildInputData('Weight', 'Kg', weightController),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: () {
-                        calculateBMI();
-                      },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: appthemeDark, // background color
-                          borderRadius: BorderRadius.circular(5), // corner radius
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        HistoryTitleWidget(
+                          title: "BMI Calculator",
+                          items: [
+                            IconButton(icon: Icon(Icons.refresh), onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => BmiScreen()), // Reload the same screen
+                              );
+                            }),
+                          ],
                         ),
-                        child: Center(
-                          child: Text(
-                              bmiResult,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16
-                              )
+
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(15, 5, 15, 15),
+                          decoration: BoxDecoration(
+                            color: Colors.white, // background color
+                            borderRadius: BorderRadius.circular(5), // corner radius
+                          ),
+                          child: Column(
+                            children: [
+                              buildInputData('Height', 'Cm', heightController),
+                              const SizedBox(height: 15),
+                              buildInputData('Weight', 'Kg', weightController),
+                            ],
                           ),
                         ),
-                      ),
-                    ), // column 1
 
-                    const SizedBox(height: 30),
-                    HistoryTitleWidget(title: 'Categories', items: []),
-                    const SizedBox(height: 20),
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () {
+                            calculateBMI();
+                          },
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: appthemeDark, // background color
+                              borderRadius: BorderRadius.circular(5), // corner radius
+                            ),
+                            child: Center(
+                              child: Text(
+                                  bmiResult,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16
+                                  )
+                              ),
+                            ),
+                          ),
+                        ), // column 1
 
-                    Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.white, // background color
-                        borderRadius: BorderRadius.circular(5), // corner radius
-                      ),
-                      child: Column(
-                        children: [
-                          buildCategories('Under Weight', 'Below 18.5'),
-                          const SizedBox(height: 5),
-                          buildCategories('Healthy Weight', '18.5 - 24.9'),
-                          const SizedBox(height: 5),
-                          buildCategories('Over Weight', '25.0 - 29.9'),
-                          const SizedBox(height: 5),
-                          buildCategories('Obese', '30.0 and above'),
-                        ],
-                      ),
-                    ), // column 2
-                  ],
-                ),
+                        const SizedBox(height: 30),
+                        HistoryTitleWidget(title: 'Categories', items: []),
+                        const SizedBox(height: 20),
+
+                        Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.white, // background color
+                            borderRadius: BorderRadius.circular(5), // corner radius
+                          ),
+                          child: Column(
+                            children: [
+                              buildCategories('Under Weight', 'Below 18.5'),
+                              const SizedBox(height: 5),
+                              buildCategories('Healthy Weight', '18.5 - 24.9'),
+                              const SizedBox(height: 5),
+                              buildCategories('Over Weight', '25.0 - 29.9'),
+                              const SizedBox(height: 5),
+                              buildCategories('Obese', '30.0 and above'),
+                            ],
+                          ),
+                        ), // column 2
+
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () {
+                            _launchUrl();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.white, // background color
+                              borderRadius: BorderRadius.circular(5), // corner radius
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        'Study Source',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: appthemeLight
+                                        )
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward,
+                                      color: appthemeLight,
+                                    )
+                                  ],
+                                ),
+                                Text('BMI classification is based on guidelines from the World Health Organization (WHO)', style: TextStyle(decoration: TextDecoration.underline),)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
 
-            if (_isLoading)
-              BlurLoader()
-          ]
+              if (_isLoading)
+                BlurLoader()
+            ]
         ),
       ),
     );
+  }
+
+  Future<void> _launchUrl() async {
+    if (!await launchUrl(_url)) {
+      throw Exception('Could not launch $_url');
+    }
   }
 
   buildTitleWidget(String title, List<Widget> items) {
@@ -200,7 +250,7 @@ class _BmiScreenState extends State<BmiScreen> {
             // width: 150,
             child: TextField(
               controller: tec,
-              // keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
           ),
         ),
@@ -216,7 +266,7 @@ class _BmiScreenState extends State<BmiScreen> {
       children: [
         Text(name, style: const TextStyle(fontSize: 15)),
         SizedBox(
-            width: 150,
+            width: 170,
             child: Text(
                 ':     $value',
                 style: const TextStyle(fontSize: 15)

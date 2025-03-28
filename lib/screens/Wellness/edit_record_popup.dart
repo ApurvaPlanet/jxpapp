@@ -82,6 +82,53 @@ class _EditRecordState extends State<EditRecord> {
   }
 
   Widget buildInputData(String type, String measure, TextEditingController tec, IconData? icon,
+      {bool isTimePicker = false})
+  {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Text('$type:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        Container(
+            height: 38,
+            alignment: Alignment.bottomLeft,
+            child: Text(
+                '$type:',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15
+                )
+            )
+        ),
+        Expanded(child: SizedBox()),
+
+        SizedBox(
+          height: 38,
+          width: 100,
+          child: TextField(
+            controller: tec,
+            readOnly: isTimePicker || (widget.module == 'sleephours' && type == 'Sleep Hour'), // Only time pickers should be read-only
+            keyboardType: isTimePicker ? null : TextInputType.number, // Enable number keyboard if not time picker
+            onTap: type == 'Sleep Hour' ? null : isTimePicker ? () => _selectTime(context, tec) : null,
+            onChanged: (value) {  // Ensure updates trigger total hours update
+              _updateTotalHours();
+            },
+
+          ),
+        ),
+
+        const SizedBox(width: 10),
+        if (measure.isNotEmpty)
+          Container(
+              height: 38,
+              alignment: Alignment.bottomLeft,
+              width: 20,
+              child: Text(measure)
+          ),
+      ],
+    );
+  }
+
+  /*Widget buildInputData(String type, String measure, TextEditingController tec, IconData? icon,
       {bool isTimePicker = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -109,7 +156,7 @@ class _EditRecordState extends State<EditRecord> {
           SizedBox(child: Text(measure), width: 20),
       ],
     );
-  }
+  }*/
 
 
   Future<void> _selectTime(BuildContext context, TextEditingController tec) async {
