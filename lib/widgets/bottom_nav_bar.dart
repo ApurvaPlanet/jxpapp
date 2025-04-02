@@ -43,7 +43,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     print('_selectedIndex: $index');
     if (_selectedIndex == index && index == 1) {
       // Force refresh
-      Navigator.of(context).pushAndRemoveUntil(  MaterialPageRoute(builder: (context) => const BottomNavBar()),      (route) => false,);
+      Navigator.of(context).pushAndRemoveUntil(  MaterialPageRoute(builder: (context) => const BottomNavBar()), (route) => false,);
     } else {
       setState(() {
         _selectedIndex = index;

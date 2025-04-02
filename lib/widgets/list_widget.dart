@@ -40,7 +40,7 @@ class _ListWidgetState extends State<ListWidget> {
           } else {
             return entry.sleepHours > 0;
           }
-        }).toList();
+        }).toList().reversed.toList();
 
     return Scaffold(
       backgroundColor: appBackground,
