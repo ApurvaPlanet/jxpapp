@@ -408,9 +408,31 @@ class _GraphWidgetState extends State<GraphWidget> {
     });
   }*/
 
+  // double _getMaxY() {
+  //   double maxY = 0;
+  //
+  //   for (var data in _sleepData) {
+  //     double value = 0;
+  //     if (widget.module == 'standhours') {
+  //       value = data.standHours;
+  //     } else if (widget.module == 'activehours') {
+  //       value = data.activityHours;
+  //     } else if (widget.module == 'sleephours') {
+  //       value = data.sleepHours;
+  //     } else if (widget.module == 'dailysteps') {
+  //       value = data.dailySteps.toDouble();
+  //     }
+  //
+  //     if (value > maxY) {
+  //       maxY = value;
+  //     }
+  //   }
+  //
+  //   return (maxY / 10).ceil() * 10; // Rounds up to the nearest 10
+  // }
   double _getMaxY() {
+    if (_sleepData.isEmpty) return 10; // Default case
     double maxY = 0;
-
     for (var data in _sleepData) {
       double value = 0;
       if (widget.module == 'standhours') {
@@ -422,15 +444,19 @@ class _GraphWidgetState extends State<GraphWidget> {
       } else if (widget.module == 'dailysteps') {
         value = data.dailySteps.toDouble();
       }
-
       if (value > maxY) {
         maxY = value;
       }
     }
-
-    return (maxY / 10).ceil() * 10; // Rounds up to the nearest 10
+// Adjust maxY dynamically based on value magnitude
+    double stepSize = maxY < 10 ? 5 : 10; // Round small values to 1, large values to 10
+    double adjustedMaxY = ((maxY / stepSize).ceil()) * stepSize;
+// Dynamic padding for 6M and Year to prevent bars from going outside
+    if (selectedPeriod == '6M' || selectedPeriod == 'Year') {
+      adjustedMaxY = ((maxY * 2) / stepSize).ceil() * stepSize; // Add 10% buffer
+    }
+    return adjustedMaxY > 0 ? adjustedMaxY : 10; // Ensure a minimum maxY of 10
   }
-
 
   /// Processes regular data (Day, Week, Month)
   void _prepareRegularChartData(String module) {
@@ -554,8 +580,9 @@ class _GraphWidgetState extends State<GraphWidget> {
             child: Padding(
               padding: EdgeInsets.all(20.0),
               child: Text(
-                "No data available for the selected period.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                "No data yet! \n Tap + to set your schedule and \nstart tracking wellness.",
+                style: TextStyle(fontSize: 16, color: Colors.grey, ),
+                textAlign: TextAlign.center,
               ),
             ),
           )

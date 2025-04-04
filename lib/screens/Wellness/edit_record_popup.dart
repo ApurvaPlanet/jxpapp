@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:intl/intl.dart';
@@ -82,21 +80,33 @@ class _EditRecordState extends State<EditRecord> {
   }
 
   Widget buildInputData(String type, String measure, TextEditingController tec, IconData? icon,
-      {bool isTimePicker = false}) {
+      {bool isTimePicker = false})
+  {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('$type:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        // Text('$type:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        Container(
+            height: 38,
+            alignment: Alignment.bottomLeft,
+            child: Text(
+                '$type:',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15
+                )
+            )
+        ),
         Expanded(child: SizedBox()),
 
         SizedBox(
           height: 38,
-          width: 130,
+          width: 100,
           child: TextField(
             controller: tec,
-            readOnly: isTimePicker, // Only time pickers should be read-only
+            readOnly: isTimePicker || (widget.module == 'sleephours' && type == 'Sleep Hour'), // Only time pickers should be read-only
             keyboardType: isTimePicker ? null : TextInputType.number, // Enable number keyboard if not time picker
-            onTap: isTimePicker ? () => _selectTime(context, tec) : null,
+            onTap: type == 'Sleep Hour' ? null : isTimePicker ? () => _selectTime(context, tec) : null,
             onChanged: (value) {  // Ensure updates trigger total hours update
               _updateTotalHours();
             },
@@ -106,7 +116,12 @@ class _EditRecordState extends State<EditRecord> {
 
         const SizedBox(width: 10),
         if (measure.isNotEmpty)
-          SizedBox(child: Text(measure), width: 20),
+          Container(
+              height: 38,
+              alignment: Alignment.bottomLeft,
+              width: 20,
+              child: Text(measure)
+          ),
       ],
     );
   }
@@ -169,7 +184,7 @@ class _EditRecordState extends State<EditRecord> {
       double sleepHours = sleepMinutes / 60.0;
 
       setState(() {
-        sleepHourController.text = formatHoursToHHMM(sleepHours);
+        sleepHourController.text = sleepHours.toString();
         _updateTotalHours();
       });
 
